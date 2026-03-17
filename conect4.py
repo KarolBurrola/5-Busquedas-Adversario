@@ -106,56 +106,62 @@ def ordena_centro(jugadas, jugador):
     """
     Ordena las jugadas de acuerdo a la distancia al centro
     """
-    return sorted(jugadas, key=lambda x: abs(x - 4))
+    return sorted(jugadas, key=lambda x: abs(x - 3))
+
+def nueva_estrategia(ventana):
+    puntos = 0
+    fichas1 = ventana.count(1)
+    fichas2 = ventana.count(-1)
+    vacias = ventana.count(0)
+
+    if fichas1 == 3 and vacias == 1:
+        puntos += 0.1
+    elif fichas1 == 2 and vacias == 2:
+        puntos += 0.02
+
+    if fichas2 == 3 and vacias == 1:
+        puntos -= 0.1
+    elif fichas2 == 2 and vacias == 2:
+        puntos -= 0.02
+
+    return puntos
+
 
 def evalua_3con(s):
-    """
-    Evalua el estado s para el jugador 1
-    """
-    conect3 = sum(
-        1 for i in range(7) for j in range(4) 
-        if (s[i + 7 * j] == s[i + 7 * (j + 1)] 
-            == s[i + 7 * (j + 2)] == 1)
-    ) - sum(
-        1 for i in range(7) for j in range(4) 
-        if (s[i + 7 * j] == s[i + 7 * (j + 1)] 
-            == s[i + 7 * (j + 2)] == -1)
-    ) + sum(
-        1 for i in range(6) for j in range(5) 
-        if (s[7 * i + j] == s[7 * i + j + 1] 
-            == s[7 * i + j + 2] == 1)
-    ) - sum(
-        1 for i in range(6) for j in range(5) 
-        if (s[7 * i + j] == s[7 * i + j + 1] 
-            == s[7 * i + j + 2] == -1)
-    ) + sum(
-        1 for i in range(5) for j in range(4) 
-        if (s[i + 7 * j] == s[i + 7 * j + 8] 
-            == s[i + 7 * j + 16] == 1)
-    ) - sum(
-        1 for i in range(5) for j in range(4) 
-        if (s[i + 7 * j] == s[i + 7 * j + 8] 
-            == s[i + 7 * j + 16] == -1)
-    ) + sum(
-        1 for i in range(5) for j in range(4) 
-        if (s[i + 7 * j + 3] == s[i + 7 * j + 9] 
-            == s[i + 7 * j + 15] == 1)
-    ) - sum(
-        1 for i in range(5) for j in range(4) 
-        if (s[i + 7 * j + 3] == s[i + 7 * j + 9] 
-            == s[i + 7 * j + 15] == -1)
-    )
-    promedio = conect3 / (7 * 4 + 6 * 5 + 5 * 4 + 5 * 4)
-    if abs(promedio) >= 1:
-        raise ValueError("Evaluación fuera de rango --> ", promedio)
-    return promedio
+    puntos = 0
+
+    col = [s[3 + 7 * i] for i in range(6)]
+    puntos += col.count(1) * 0.05
+    puntos -= col.count(-1) * 0.05
+
+    for i in range(6):
+        for j in range(4):
+            ventana = [s[7 * i + j + k] for k in range(4)]
+            puntos += nueva_estrategia(ventana)
+    for i in range(7):
+        for j in range(3):
+            ventana = [s[i + 7 * (j + k)] for k in range(4)]
+            puntos += nueva_estrategia(ventana)
+    for i in range(4):
+        for j in range(3):
+            ventana = [s[i + 7 * j + 8 * k] for k in range(4)]
+            puntos += nueva_estrategia(ventana)
+    for i in range(4):
+        for j in range(3):
+            ventana = [s[i + 7 * j + 3 + 6 * k] for k in range(4)]
+            puntos += nueva_estrategia(ventana)
+
+    if puntos >= 1.0: return 0.99
+    if puntos <= -1.0: return -0.99
+
+    return puntos
 
 if __name__ == '__main__':
 
     cfg = {
         "Jugador 1": "Humano",      #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
-        "Jugador 2": "Aleatorio",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
-        "profundidad máxima": 5,
+        "Jugador 2": "Negamax",   #Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
+        "profundidad máxima": 6,
         "tiempo": 10,
         "ordena": ordena_centro,    #Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
         "evalua": evalua_3con       #Puede ser None o una función f(estado) -> número entre -1 y 1
