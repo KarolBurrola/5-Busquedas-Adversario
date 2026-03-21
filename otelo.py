@@ -35,18 +35,46 @@ import minimax
 
 class Otelo(js.JuegoZT2):
     def inicializa(self):
-        t = [0 for _ in range(8*8)]
+        s = [0 for _ in range(8*8)]
 
-        t[27] = -1
-        t[28] = 1
-        t[35] = -1
-        t[36] = 1
+        s[27] = -1
+        s[28] = 1
+        s[35] = -1
+        s[36] = 1
 
-        return tuple(t)
-
+        return tuple(s)
 
     def jugadas_legales(self, s, j):
-        return (columna for columna in range(7) if s[columna] == 0)
+        jugadas = []
+        oponente = -j
+        direcciones = [
+            (-1, -1), (-1, 0), (-1, 1),  # Arriba
+            (0, -1), (0, 1),  # Lados
+            (1, -1), (1, 0), (1, 1)  # Abajo
+        ]
+
+        for pos in range(64):
+            if s[pos] != 0:
+                continue
+
+            fila = pos // 8
+            col = pos % 8
+
+            for df, dc in direcciones:
+                f = fila + df
+                c = col + dc
+                contrarias = 0
+
+                while 0 <= f < 8 and 0 <= c < 8 and s[f * 8 + c] == oponente:
+                    contrarias += 1
+                    f += df
+                    c += dc
+
+                if contrarias > 0 and 0 <= f < 8 and 0 <= c < 8 and s[f * 8 + c] == j:
+                    jugadas.append(pos)
+                    break
+
+        return jugadas if jugadas else [None]
 
     def sucesor(self, s, a, j):
         s = list(s[:])
@@ -57,23 +85,14 @@ class Otelo(js.JuegoZT2):
         return tuple(s)
 
     def ganancia(self, s):
-        # Verticales
-        for i in range(7):
-            for j in range(3):
-                if (s[i + 7 * j] == s[i + 7 * (j + 1)] == s[i + 7 * (j + 2)] == s[i + 7 * (j + 3)] != 0):
-                    return s[i + 7 * j]
-        # Horizontales
-        for i in range(6):
-            for j in range(4):
-                if (s[7 * i + j] == s[7 * i + j + 1] == s[7 * i + j + 2] == s[7 * i + j + 3] != 0):
-                    return s[7 * i + j]
-        # Diagonales
-        for i in range(4):
-            for j in range(3):
-                if (s[i + 7 * j] == s[i + 7 * j + 8] == s[i + 7 * j + 16] == s[i + 7 * j + 24] != 0):
-                    return s[i + 7 * j]
-                if (s[i + 7 * j + 3] == s[i + 7 * j + 9] == s[i + 7 * j + 15] == s[i + 7 * j + 21] != 0):
-                    return s[i + 7 * j + 3]
+        total = sum(s)
+
+        if total > 0:
+            return 1
+
+        if total < 0:
+            return -1
+
         return 0
 
     def terminal(self, s):
