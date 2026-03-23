@@ -77,10 +77,15 @@ class InterfaceConecta4(js.JuegoInterface):
 
         """
         a = [' X ' if x == 1 else ' O ' if x == -1 else '   ' for x in s]
-        print('\n 0 | 1 | 2 | 3 | 4 | 5 | 6')
+        print('\n  0   1   2   3   4   5   6')
+        print('+---+---+---+---+---+---+---+')
+
         for i in range(6):
-            print('|'.join(a[7 * i:7 * (i + 1)]))
-            print('---+---+---+---+---+---+---\n')
+            f = "|" + "|".join(a[7 * i:7 * (i + 1)]) + "|"
+            print(f)
+            print('+---+---+---+---+---+---+---+')
+        print()
+
     
     def muestra_ganador(self, g):
         """
