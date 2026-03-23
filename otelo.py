@@ -15,6 +15,9 @@ El estado se va a representar como una lista de 64 elementos, tal que
 
 Y cada elemento puede ser 0, 1 o -1, donde 0 es vacío, 1 es una ficha del jugador 1 y -1
 es una ficha del jugador 2.
+Donde:
+- Jugador 1: Fichas negras  (1)   <- Es el que comienza el juego
+- Jugador 2: Fichas blancas (-1)
 
 Las acciones son (se deben cumplir ambas condiciones):
 - Poner una ficha que sea adyacente a la ficha del oponente.
@@ -26,6 +29,7 @@ Un estado terminal se podría dar en los siguientes casos:
 - Ambos jugadores ya no tienen acciones legales.
 
 La ganancia es 1 si gana el jugador 1, -1 si gana el jugador 2 y 0 si es un empate.
+
 
 """
 
@@ -77,12 +81,39 @@ class Otelo(js.JuegoZT2):
         return jugadas if jugadas else [None]
 
     def sucesor(self, s, a, j):
-        s = list(s[:])
-        for i in range(5, -1, -1):
-            if s[a + 7 * i] == 0:
-                s[a + 7 * i] = j
-                break
-        return tuple(s)
+        if a is None:
+            return s
+
+        tablero = list(s)
+
+        tablero[a] = j
+        oponente = -j
+
+        fila = a // 8
+        col = a % 8
+
+        direcciones = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1), (0, 1),
+            (1, -1), (1, 0), (1, 1)
+        ]
+
+        for df, dc in direcciones:
+            f = fila + df
+            c = col + dc
+            voltear = []
+
+            while 0 <= f < 8 and 0 <= c < 8 and tablero[f * 8 + c] == oponente:
+                voltear.append(f * 8 + c)
+                f += df
+                c += dc
+
+            if len(voltear) > 0 and 0 <= f < 8 and 0 <= c < 8 and tablero[f * 8 + c] == j:
+
+                for pos in voltear:
+                    tablero[pos] = j
+
+        return tuple(tablero)
 
     def ganancia(self, s):
         total = sum(s)
@@ -96,9 +127,15 @@ class Otelo(js.JuegoZT2):
         return 0
 
     def terminal(self, s):
+        # Si el tablero está completamente lleno -- ACABA
         if 0 not in s:
             return True
-        return self.ganancia(s) != 0
+
+        # Si ninguno de los jugadores puede hacer un movimiento -- ACABA
+        if self.jugadas_legales(s, 1) == [None] and self.jugadas_legales(s, -1) == [None]:
+            return True
+
+        return False
 
 
 class InterfaceConecta4(js.JuegoInterface):
@@ -108,11 +145,15 @@ class InterfaceConecta4(js.JuegoInterface):
         para mostrar el estado de forma más amigable
 
         """
-        a = [' X ' if x == 1 else ' O ' if x == -1 else '   ' for x in s]
-        print('\n 0 | 1 | 2 | 3 | 4 | 5 | 6')
-        for i in range(6):
-            print('|'.join(a[7 * i:7 * (i + 1)]))
-            print('---+---+---+---+---+---+---\n')
+        a = [' ● ' if x == 1 else ' ○ ' if x == -1 else '   ' for x in s]
+
+        print('\n   | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |')
+        print('---+---+---+---+---+---+---+---+---+')
+
+        for i in range(8):
+            fila_texto = f" {i} |" + "|".join(a[8 * i:8 * (i + 1)]) + "|"
+            print(fila_texto)
+            print('---+---+---+---+---+---+---+---+---+')
 
     def muestra_ganador(self, g):
         """
