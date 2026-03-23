@@ -138,11 +138,10 @@ class Otelo(js.JuegoZT2):
         return False
 
 
-class InterfaceConecta4(js.JuegoInterface):
+class InterfaceOtelo(js.JuegoInterface):
     def muestra_estado(self, s):
         """
-        Muestra el estado del juego, se puede usar la función pprint_conecta4
-        para mostrar el estado de forma más amigable
+        Muestra el estado del juego, en este caso, "Otelo"
 
         """
         a = [' ● ' if x == 1 else ' ○ ' if x == -1 else '   ' for x in s]
@@ -157,14 +156,17 @@ class InterfaceConecta4(js.JuegoInterface):
 
     def muestra_ganador(self, g):
         """
-        Muestra el ganador del juego, se puede usar " XO"[g] para mostrar el
-        ganador de forma más amigable
+        Muestra el ganador del juego, en este caso decidí colocar
+        los símbolos (bolitas)
 
         """
+        bolitas = {1: '● (Negras)', -1: '○ (Blancas)'}
+
         if g != 0:
-            print("Gana el jugador " + " XO"[g])
+            print("Gana el jugador " + bolitas[g])
         else:
             print("Un asqueroso empate")
+
 
     def jugador_humano(self, s, j):
         print("Jugador", " XO"[j])
@@ -261,7 +263,7 @@ if __name__ == '__main__':
             raise ValueError("Jugador no reconocido")
 
 
-    interfaz = InterfaceConecta4(
+    interfaz = InterfaceOtelo(
         Conecta4(),
         jugador1=jugador_cfg(cfg["Jugador 1"]),
         jugador2=jugador_cfg(cfg["Jugador 2"])
