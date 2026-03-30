@@ -160,7 +160,7 @@ class InterfaceOtelo(js.JuegoInterface):
         los símbolos (bolitas)
 
         """
-        bolitas = {1: '● (Negras)', -1: '○ (Blancas)'}
+        bolitas = {1: '1 (Fichas negras) ● ', -1: '2 (Fichas blancas) ○ '}
 
         if g != 0:
             print("Gana el jugador " + bolitas[g])
@@ -169,69 +169,81 @@ class InterfaceOtelo(js.JuegoInterface):
 
 
     def jugador_humano(self, s, j):
-        print("Jugador", " XO"[j])
         jugadas = list(self.juego.jugadas_legales(s, j))
+
+        if jugadas == [None]:
+            print("\n Te quedaste sin más jugadas legales.")
+            input("Presiona enter para ceder tu turno al siguiente oponente")
+            return None
+
+        print("\nJugador", "● (Negras)" if j == 1 else "○ (Blancas)")
         print("Jugadas legales:", jugadas)
-        jugada = None
+
+        jugada = -1
         while jugada not in jugadas:
-            jugada = int(input("Jugada: "))
+            try:
+                jugada = int(input("Jugada: "))
+            except ValueError:
+                print("Por favor, ingresa un número válido.")
+
         return jugada
 
+# Asignando pesos estratégicos a la matriz
+pesos = [
+        100, -20, 15, 5, 5, 15, -20, 100,
+        -20, -30, -5, -5, -5, -5, -30, -20,
+        15, -5, 10, 2, 2, 10, -5, 15,
+        5, -5, 2, 1, 1, 2, -5, 5,
+        5, -5, 2, 1, 1, 2, -5, 5,
+        15, -5, 10, 2, 2, 10, -5, 15,
+        -20, -30, -5, -5, -5, -5, -30, -20,
+        100, -20, 15, 5, 5, 15, -20, 100
+    ]
 
-def ordena_centro(jugadas, jugador):
+def ordena_otelo(jugadas, j):
     """
-    Ordena las jugadas de acuerdo a la distancia al centro
+    Heurística que recibe la lista de movimientos legales y los ordena de mayor a menor valor
+    estratégico observando la matriz de pesos y además optimiza el algoritmo donde la poda
+    alfa-beta explora los mejores escenarios y descarta los peores
     """
-    return sorted(jugadas, key=lambda x: abs(x - 3))
+
+    if None in jugadas:
+        return jugadas
+
+    jugadas = sorted(jugadas, key=lambda pos: pesos[pos], reverse=True)
+
+    return jugadas
 
 
-def nueva_estrategia(ventana):
-    puntos = 0
-    fichas1 = ventana.count(1)
-    fichas2 = ventana.count(-1)
-    vacias = ventana.count(0)
+def evalua_otelo(s):
+    """
+    Heurística que calcula el estado del tablero usando una matriz de pesos donde cada casilla
+    tiene un valor definido el cual penaliza las casillas adyacentes para no darle ventaja al
+    oponente
+    """
 
-    if fichas1 == 3 and vacias == 1:
-        puntos += 0.1
-    elif fichas1 == 2 and vacias == 2:
-        puntos += 0.02
+    score1 = 0
+    score2 = 0
 
-    if fichas2 == 3 and vacias == 1:
-        puntos -= 0.1
-    elif fichas2 == 2 and vacias == 2:
-        puntos -= 0.02
+    for i in range(64):
+        if s[i] == 1:
+            score1 += pesos[i]
+        elif s[i] == -1:
+            score2 += pesos[i]
 
-    return puntos
+    diferencia = score1 - score2
 
+    ms = 1000.0
 
-def evalua_3con(s):
-    puntos = 0
+    if diferencia == 0:
+        return 0.0
 
-    col = [s[3 + 7 * i] for i in range(6)]
-    puntos += col.count(1) * 0.05
-    puntos -= col.count(-1) * 0.05
+    ev = diferencia / ms
 
-    for i in range(6):
-        for j in range(4):
-            ventana = [s[7 * i + j + k] for k in range(4)]
-            puntos += nueva_estrategia(ventana)
-    for i in range(7):
-        for j in range(3):
-            ventana = [s[i + 7 * (j + k)] for k in range(4)]
-            puntos += nueva_estrategia(ventana)
-    for i in range(4):
-        for j in range(3):
-            ventana = [s[i + 7 * j + 8 * k] for k in range(4)]
-            puntos += nueva_estrategia(ventana)
-    for i in range(4):
-        for j in range(3):
-            ventana = [s[i + 7 * j + 3 + 6 * k] for k in range(4)]
-            puntos += nueva_estrategia(ventana)
+    if ev >= 1.0: return 0.99
+    if ev <= -1.0: return -0.99
 
-    if puntos >= 1.0: return 0.99
-    if puntos <= -1.0: return -0.99
-
-    return puntos
+    return ev
 
 
 if __name__ == '__main__':
@@ -241,8 +253,8 @@ if __name__ == '__main__':
         "Jugador 2": "Negamax",  # Puede ser "Humano", "Aleatorio", "Negamax", "Tiempo"
         "profundidad máxima": 6,
         "tiempo": 10,
-        "ordena": ordena_centro,  # Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
-        "evalua": evalua_3con  # Puede ser None o una función f(estado) -> número entre -1 y 1
+        "ordena": ordena_otelo,  # Puede ser None o una función f(jugadas, j) -> lista de jugadas ordenada
+        "evalua": evalua_otelo  # Puede ser None o una función f(estado) -> número entre -1 y 1
     }
 
 
@@ -264,14 +276,14 @@ if __name__ == '__main__':
 
 
     interfaz = InterfaceOtelo(
-        Conecta4(),
+        Otelo(),
         jugador1=jugador_cfg(cfg["Jugador 1"]),
         jugador2=jugador_cfg(cfg["Jugador 2"])
     )
 
-    print("El Juego del Conecta 4 ")
-    print("Jugador 1:", cfg["Jugador 1"])
-    print("Jugador 2:", cfg["Jugador 2"])
+    print("El juego de Othello")
+    print("Jugador 1 (Negras):", cfg["Jugador 1"])
+    print("Jugador 2 (Blancas):", cfg["Jugador 2"])
     print()
 
     interfaz.juega()
