@@ -114,6 +114,10 @@ def ordena_centro(jugadas, jugador):
     return sorted(jugadas, key=lambda x: abs(x - 3))
 
 def nueva_estrategia(ventana):
+    """
+    Analiza segmentos específicos buscando 4 fichas en fila donde asigna una puntuación parcial
+    evaluando la amenaza/ventaja y asigna pesos
+    """
     puntos = 0
     fichas1 = ventana.count(1)
     fichas2 = ventana.count(-1)
@@ -133,6 +137,10 @@ def nueva_estrategia(ventana):
 
 
 def evalua_3con(s):
+    """
+    Evalúa el estado general del tablero, recorre la matriz donde busca todas las combinaciones
+    posibles de fichas alineadas en 4 y acumula puntuaciones
+    """
     puntos = 0
 
     col = [s[3 + 7 * i] for i in range(6)]

@@ -281,7 +281,9 @@ if __name__ == '__main__':
         jugador2=jugador_cfg(cfg["Jugador 2"])
     )
 
-    print("El juego de Othello")
+    print("\n" + "-" * 40)
+    print("          --- O T H E L L O ---")
+    print("-" * 40)
     print("Jugador 1 (Negras):", cfg["Jugador 1"])
     print("Jugador 2 (Blancas):", cfg["Jugador 2"])
     print()
